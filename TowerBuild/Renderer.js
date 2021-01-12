@@ -2,6 +2,7 @@ import * as WebGL from './WebGL.js';
 import shaders from './shaders.js';
 
 const mat4 = glMatrix.mat4;
+const vec3 = glMatrix.vec3;
 
 // This class prepares all assets for use with WebGL
 // and takes care of rendering.
@@ -13,7 +14,7 @@ export default class Renderer {
         this.glObjects = new Map();
         this.programs = WebGL.buildPrograms(gl, shaders);
 
-        gl.clearColor(1, 1, 1, 1);
+        gl.clearColor(0.1, 1, 1, 1);
         gl.enable(gl.DEPTH_TEST);
         gl.enable(gl.CULL_FACE);
     }
@@ -173,7 +174,7 @@ export default class Renderer {
         return mvpMatrix;
     }
 
-    render(scene, camera) {
+    render(scene, camera, light) {
         const gl = this.gl;
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -182,9 +183,23 @@ export default class Renderer {
         gl.useProgram(program.program);
         gl.uniform1i(program.uniforms.uTexture, 0);
 
+        /*gl.uniform1f(program.uniforms.uAmbient, light.ambient);
+        gl.uniform1f(program.uniforms.uDiffuse, light.diffuse);
+        gl.uniform1f(program.uniforms.uSpecular, light.specular);
+        gl.uniform1f(program.uniforms.uShininess, light.shininess);
+        gl.uniform3fv(program.uniforms.uLightPosition, light.position);
+        let color = vec3.clone(light.color);
+        vec3.scale(color, color, 1.0 / 255.0);
+        gl.uniform3fv(program.uniforms.uLightColor,  color);
+        gl.uniform3fv(program.uniforms.uLightAttenuation, light.attenuatuion);
+        */
+
         const mvpMatrix = this.getViewProjectionMatrix(camera);
         for (const node of scene.nodes) {
             this.renderNode(node, mvpMatrix);
+        }
+        for (const block of scene.blocks) {
+            this.renderNode(block, mvpMatrix);
         }
     }
 
@@ -195,11 +210,23 @@ export default class Renderer {
         mat4.mul(mvpMatrix, mvpMatrix, node.matrix);
 
         if (node.mesh) {
+            //const program = this.programs.phong;
             const program = this.programs.simple;
             gl.uniformMatrix4fv(program.uniforms.uMvpMatrix, false, mvpMatrix);
             for (const primitive of node.mesh.primitives) {
                 this.renderPrimitive(primitive);
             }
+        }
+        if (node.name === "Skybox") {
+            gl.disable(gl.DEPTH_TEST);
+            gl.disable(gl.CULL_FACE);
+            gl.depthMask(false);        
+            this.renderNode(node, mvpMatrix);
+
+            gl.enable(gl.DEPTH_TEST)
+            gl.enable(gl.CULL_FACE);
+            gl.depthMask(true);
+
         }
 
         for (const child of node.children) {

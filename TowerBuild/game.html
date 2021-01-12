@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tower Build</title>
+
+    <link rel="stylesheet" type="text/css" href="../../common/style.css">
+
+    <script type="text/javascript" src="../../lib/gl-matrix-min.js"></script>
+    <script type="text/javascript" src="../../lib/dat.gui.min.js"></script>
+    <script type="module" src="TowerBuild.js"></script>
+</head>
+<body>
+    <div id="overlay">
+        <div class="stats">Score: <span id="score"></span></div>
+        <div id="pause" class="mainButton" onClick=>play / pause</div>
+        <div id="restart" class="mainButton" onClick="window.location.reload()">restart game</div>
+    </div>
+
+    <div id="startDiv">
+        <div id="startGame"></div>
+        <div id="instructions">
+            <p><b>Help constructors build a tower!</b></p>
+            <p>Your job is to drop blocks on top of each other to create a sturdy tower.</p>
+            <p>If blocks are to misaligned, they will fall and you will lose the game.</p>
+            <p>Try to build as tall of a tower as possible!</p>
+            <p>To release a block, press the <b>space bar</b>.</p>
+        </div>
+        <button class="mainButton" id="startButton">Start</button>
+    </div>
+    <div id="endDiv">
+        <div id="lostGame">
+            <div>The tower has fallen.</div>
+        </div>
+        <div id="scoreDiv">
+            <p><b> The tower has fallen. </b></p>
+            You reached the height of <b> <span id="scoreSpan"></span> </b> blocks.
+        </div>
+         <div id="restartDiv">
+            <button class="mainButton" id="restartButton" onClick="window.location.reload();"> Restart game </button>
+        </div>
+       
+    </div>
+
+
+    <div class="fullscreen">
+        <canvas></canvas>
+    </div>
+</body>
+</html>

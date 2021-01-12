@@ -40,6 +40,15 @@ export default class Node {
         mat4.getScaling(this.scale, this.matrix);
     }
 
+    getGlobalTransform() {
+        if (!this.parent) {
+            return mat4.clone(this.transform);
+        } else {
+            let transform = this.parent.getGlobalTransform();
+            return mat4.mul(transform, transform, this.transform);
+        }
+    }
+
     updateMatrix() {
         mat4.fromRotationTranslationScale(
             this.matrix,
