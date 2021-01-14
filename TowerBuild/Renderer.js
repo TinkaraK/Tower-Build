@@ -217,18 +217,7 @@ export default class Renderer {
                 this.renderPrimitive(primitive);
             }
         }
-        if (node.name === "Skybox") {
-            gl.disable(gl.DEPTH_TEST);
-            gl.disable(gl.CULL_FACE);
-            gl.depthMask(false);        
-            this.renderNode(node, mvpMatrix);
-
-            gl.enable(gl.DEPTH_TEST)
-            gl.enable(gl.CULL_FACE);
-            gl.depthMask(true);
-
-        }
-
+       
         for (const child of node.children) {
             this.renderNode(child, mvpMatrix);
         }

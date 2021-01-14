@@ -61,7 +61,7 @@ a.back:hover {
     left: 40%;
     margin-right: -50%;
     transform: translate(-50%, -50%);
-    font-family: sans-serif; 
+    font-family: 'Calibri', 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif;  
 }
 
 
@@ -92,9 +92,9 @@ a.back:hover {
 
 #endDiv{
     
-    color: rgba(243, 135, 12, 1);
+    color: rgb(0, 0, 0);
     margin: 0;
-    background-color:rgba(240, 201, 28, 0.986);
+    background-color:rgba(240, 42, 28, 0.986);
     position: absolute;
     top: 50%;
     left: 50%;

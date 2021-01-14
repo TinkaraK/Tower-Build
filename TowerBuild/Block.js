@@ -3,11 +3,13 @@ import Physics from './Physics.js';
 
 const mat4 = glMatrix.mat4;
 const vec3 = glMatrix.vec3;
+const quat = glMatrix.quat;
+
 
 export default class Block extends Node { 
-    constructor(blockNum, tr, scene, startDirection) {
+    constructor(blockNum, tr, scene, startDirection, blockBefore) {
         super(tr);
-        this.num = blockNum;
+        this.blockNum = blockNum;
         this.translation = tr;
         this.scene = scene;
         if (this.scene) {
@@ -16,13 +18,17 @@ export default class Block extends Node {
             else
                 this.mesh = this.scene.nodes[26].mesh;
         }
-        this.leftAndRight = true;
-        this.dropNew = false;
-        this.dropped = false; // spuscena - na stolpu
-        this.falling = false; // pada - 
+        this.r = [0,0,0]; // rotacija
+        this.leftAndRight = true; // ali se vozi levo in desno
+        this.dropNew = false; // kdaj lahko dodas novega
+        this.dropped = false; // ko je postavljen na stolpu
+        this.falling = false; // pada 
+        this.fallingDown = false;
+        this.tippingOver = false;
+        this.rotationDirection = true;
+        this.gameOver = false;
         this.borders = this.scene.borders;
-        this.lastBlock = this.scene.lastBlock;
-        console.log("zadnji " + this.lastBlock);
+        this.blockBefore = blockBefore; // njegov predhodnik
         if (startDirection === 'left')
             this.direction = true;
         else
@@ -31,72 +37,126 @@ export default class Block extends Node {
     }
 
     start() {
-
+        
     }
 
-    update(dt) {
+    update(speed) {
         // ce se premika levo desno, je treba samo x spremenit
         if (this.leftAndRight) {      
-            if (this.direction) {
-                if (this.translation[0] <= this.borders[1][0]) {
+            if (this.direction) { // desno
+                if (this.translation[0] <= this.borders[1][0]) { // ce zadane desni rob, mora nazaj
                     this.direction = false;
                 }
-                this.translation[0] -= 0.06;
+                this.translation[0] -= speed;
             }
-            else {
-                this.translation[0] += 0.1;
-                if (this.translation[0] >= this.borders[0][0]) {
+            if (!this.direction ) { // levo
+                this.translation[0] += speed;
+                if (this.translation[0] >= this.borders[0][0]) { // ce zadane levi rob, mora nazaj
                     this.direction = true;
                 }
             }
         }
+        // ce pada - gre po y navzdol, treba je gledat ce se ujema z y+2 prejsnjim in potem povrsino po x
         if (this.falling) {
-            if (this.leftAndRight) {
-                this.leftAndRight = false;
-                this.dropNew = true;
-            }
-            if (this.scene.blocks.length == 1) { // ce je to prvi block
-                if (this.translation[1] > 1) {
+            this.leftAndRight = false;
+            // ce je prvi block:
+            if (this.scene.blocks.length == 1){// ce je to prvi block
+                if (this.translation[1] > 1) { // ce pada - da se ni na tleh
                     this.translation[1] -= 0.2;
                     this.translation[2] = this.borders[0][2];
                 }
-                else {
-                    this.falling = false;
-                    this.dropped = true;
+                else { // ce pristane na tleh
+                    this.falling = false; // ne pada vec
+                    this.dropped = true; // je dropped
+                    this.dropNew = true; // dodaj novega
+                    this.scene.score ++; // povecaj score - ker je bilo uredu
                 }
             }
-            else { // ce ni prvi block - gledam pozicijo prejsnjega blocka da dobim x y
-                console.log(this.scene.lastBlock);
-                const previous = this.scene.lastBlock;
-                //this.translation[2] = this.borders[0][2];
-                if (this.translation[1] > previous.translation[1] + 2) {
+            // ce ni prvi block - ima blockBefore
+            else { 
+                if (this.translation[1] > this.blockBefore.translation[1] + 2) {
                     this.translation[1] -= 0.2;
-                    this.translation[2] = this.borders[0][2];
+                    this.translation[2] = this.blockBefore.translation[2];
                 }
                 else {
                     this.falling = false;
-                    this.dropped = true;
+                    this.translation[1] = this.translation[1];
+                    let diff = this.translation[0] - this.blockBefore.translation[0]
+                    let c = Math.abs(diff);
+                    // ce je cez vec kot polovico, se sestavi
+                    if (c <= 1) {
+                        console.log("pristane")
+                        this.dropped = true;
+                        this.dropNew = true; // dodaj novega
+                        this.scene.score ++; // povecaj score - ker je bilo uredu
+                    }
+                    // ce popolnoma zgresi, zacne padati proti tlem
+                    else if (c > 2) {
+                       // console.log("pada proti tlem")
+                        this.fallingDown = true;
+                        
+                    }
+                    // ce zadane spodnjega, ampak premalo, se prevrne
+                    else {
+                        this.tippingOver = true;
+                        // ugotovi, v katero smer se more prevrnt
+                        if (diff > 0) {
+                            console.log("vecji " + diff); // levo
+                            this.rotationDirection = false;
+                        }
+                        else {
+                            console.log("manjsi " + diff); // desno
+                            this.rotationDirection = true;
+                        }
+                    }
                 }
-                console.log("trenutni: " + this.translation);
-                console.log("prejsnji: " + this.scene.lastBlock.translation);
             }
-            
+        }
+        if (this.fallingDown) {
+            if (this.translation[1] > 1) { // ce pada - da se ni na tleh
+                this.translation[1] -= 0.2;
+                this.translation[2] = this.borders[0][2];
+            }
+            else { // ce pristane na tleh
+                this.fallingDown = false; // ne pada vec
+                this.gameOver = true;
+            }
+        }
+        if (this.tippingOver) {
+            const pi = Math.PI;
+            // ce gre v desno
+            if (this.rotationDirection) {
+                this.r[2] += 0.1;
+                this.translation[1] -= 0.2; // pada
+                this.translation[0] -= 0.15; // zamakne
+                this.translation[2] = this.translation[2];
+                if (this.translation[1] <= 1 || this.scene.blocks.length > 6 && this.translation[1] <= this.scene.blocks[this.blockNum - 5].translation[1]) {
+                    this.tippingOver = false;
+                    this.gameOver = true;
+                }
+            }
+            // ce gre v levo
+            else {
+                this.r[2] -= 0.1;
+                this.translation[1] -= 0.2; // pada
+                this.translation[0] += 0.15; // zamakne
+                this.translation[2] = this.translation[2];
+                if (this.translation[1] <= 1 || this.scene.blocks.length > 6 && this.translation[1] <= this.scene.blocks[this.blockNum - 5].translation[1]) {
+                    this.tippingOver = false;
+                    this.gameOver = true;
+                }
+            }
+            const degrees = this.r.map(x => x * 180 / pi);
+            quat.fromEuler(this.rotation, ...degrees);
+        }
+            //this.updateMatrix();
+    }
+
+    startCollapsing() {
+        if (this.scene) {
+            this.translation[1] -= 0.2;
         }
     }
-
-    drop(dt) {
-        this.dropped = true;
-        let move = vec3.create();
-        vec3.sub(move, this.translation);
-        vec3.normalize(move, move);
-        move[2] = -move[2];
-
-
-    }
-
-    calculateOverlapWithPrevious() {
-        const i = 1;
-    }
-
+    
     
 }
