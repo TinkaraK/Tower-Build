@@ -12,8 +12,9 @@
 <body>
     <div id="overlay">
         <div class="stats">Score: <span id="score"></span></div>
-        <div id="pause" class="mainButton" onClick=>play / pause</div>
-        <div id="restart" class="mainButton" onClick="window.location.reload()">restart game</div>       
+        <div class="stats">High score: <span id="highScore"></span></div>
+        <div id="pause" class="mainButton" >play / pause</div>
+        <div id="restart" class="mainButton" onClick="window.location.reload(false)">restart game</div>       
     </div>
 
     <div id="startDiv">
@@ -27,7 +28,7 @@
             <p>If you think the blocks aren't moving fast enough, 
             <br>feel free to change the speed in the upper right corner!</br></p>
         </div>
-        <button class="mainButton" id="startButton">Start</button>
+        <button class="mainButton" id="startButton">Hide</button>
     </div>
     <div id="endDiv">
         <div id="lostGame">

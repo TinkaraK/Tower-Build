@@ -5,12 +5,14 @@ import Renderer from './Renderer.js';
 import Block from './Block.js';
 import Border from './Borders.js';
 import Light from './Light.js';
+import Hook from './Hook.js';
 
 const mat4 = glMatrix.mat4;
 const vec3 = glMatrix.vec3;
 let paused = true;
 let gameLost = false;
 let highScore = 0;
+
 
 document.getElementById("startGame").style.visibility = "visible";
 document.getElementById("lostGame").style.visibility = "hidden";
@@ -25,16 +27,17 @@ class App extends Application {
         this.speed = 0.1;
 
         this.loader = new GLTFLoader();
-        await this.loader.load('../../common/models/scene4/scene4.gltf');
+        await this.loader.load('../../common/models/scene/scene.gltf');
 
         this.scene = await this.loader.loadScene(this.loader.defaultScene);
         this.camera = await this.loader.loadNode('Camera');
         this.emptyLeft = await this.loader.loadNode('Border0');
         this.emptyRight = await this.loader.loadNode('Border1');
-        this.crane = await this.loader.loadNode('crane');
-        
+        this.crane = await this.loader.loadNode('crane2');
+        this.emptyHookLeft = await this.loader.loadNode('leftHook');
+        this.emptyHookRight = await this.loader.loadNode('rightHook');
         this.light = new Light();
-
+        this.hook = new Hook();
         if (!this.scene || !this.camera) {
             throw new Error('Scene or Camera not present in glTF');
         }
@@ -57,7 +60,9 @@ class App extends Application {
         this.scene.blocks = [];
         this.scene.score = 0;
         this.scene.borders = [this.emptyLeft.translation, this.emptyRight.translation];
-        
+        this.scene.emptyHooks = [this.emptyHookLeft.translation, this.emptyHookRight.translation];
+        this.scene.hooks = [];//[new Hook(false, "left", this.scene), new Hook(true, "right", this.scene)];
+        this.scene.sumC = 0;
 
         this.renderer = new Renderer(this.gl);
         this.renderer.prepareScene(this.scene);
@@ -65,6 +70,7 @@ class App extends Application {
         //this.paused = true;
         this.addBlock();
         this.startTime = Date.now();
+   
         
     }
 
@@ -73,15 +79,25 @@ class App extends Application {
         document.getElementById("startGame").style.visibility = "hidden";
         document.getElementById("startDiv").style.visibility = "hidden";
         document.getElementById("overlay").style.visibility = "visible";
-        this.paused = false;
+        //this.paused = false;
     }
 
     pauseGame() {
         this.paused = !this.paused;
     }
 
+    resetGame() {
+        this.scene = this.loader.loadScene(this.loader.defaultScene);
+        this.camera = this.loader.loadNode('Camera');
+        this.emptyLeft = this.loader.loadNode('Border0');
+        this.emptyRight = this.loader.loadNode('Border1');
+        this.crane = this.loader.loadNode('crane');   
+    }
+
     endGame() {
         this.paused = true;
+        const audio = new Audio('../../common/sound/game_over.mp3');
+        audio.play();
         console.log("konec")
         document.getElementById("endDiv").style.visibility = "visible";
         this.score = this.scene.score;
@@ -164,11 +180,20 @@ class App extends Application {
                             this.addBlock();
                             block.dropNew = false;
                         }  
+                        
                     }
                    
                 }
+                for (const hook of this.scene.hooks) {
+                    if (hook) {
+                        
+                    }
+                }
             document.getElementById("score").innerHTML = this.scene.score;
             document.getElementById("scoreSpan").innerHTML = this.scene.score;  
+            document.getElementById("highScore").innerHTML = this.scene.score;
+            //document.getElementById("highScoreSpan").innerHTML = this.scene.score;  
+
             }
             if (this.paused) {
                 console.log("paused");
