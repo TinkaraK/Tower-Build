@@ -7,12 +7,13 @@ const quat = glMatrix.quat;
 
 
 export default class Hook extends Node { 
-    constructor(direction, tr, scene) {
+    constructor(hookNum, tr, scene, direction) {
         super(tr);
+        this.hookNum = hookNum;
         this.translation = tr;
         this.scene = scene;
         if (this.scene) {
-            this.mesh = this.scene.nodes[8].mesh;
+            this.mesh = this.scene.nodes[6].mesh;
             this.hooks = this.scene.emptyHooks;
         }
         if (direction === 'left')
@@ -20,6 +21,7 @@ export default class Hook extends Node {
         else
             this.direction = false;
         this.visible = true;
+        this.scale = [0.4,0.4,0.6];
         this.updateMatrix;
     }
 

@@ -37,7 +37,6 @@ class App extends Application {
         this.emptyHookLeft = await this.loader.loadNode('leftHook');
         this.emptyHookRight = await this.loader.loadNode('rightHook');
         this.light = new Light();
-        this.hook = new Hook();
         if (!this.scene || !this.camera) {
             throw new Error('Scene or Camera not present in glTF');
         }
@@ -48,7 +47,6 @@ class App extends Application {
 
 
         document.getElementById("pause").addEventListener('click', this.pauseGame);
-        
         document.getElementById("startButton").addEventListener('click', this.startGame);
         document.addEventListener('keyup', e => {
             if (e.code == "Space") {
@@ -58,18 +56,17 @@ class App extends Application {
 
         
         this.scene.blocks = [];
+        this.scene.hooks = [];//[new Hook(false, "left", this.scene), new Hook(true, "right", this.scene)];
         this.scene.score = 0;
         this.scene.borders = [this.emptyLeft.translation, this.emptyRight.translation];
         this.scene.emptyHooks = [this.emptyHookLeft.translation, this.emptyHookRight.translation];
-        this.scene.hooks = [];//[new Hook(false, "left", this.scene), new Hook(true, "right", this.scene)];
         this.scene.sumC = 0;
 
         this.renderer = new Renderer(this.gl);
         this.renderer.prepareScene(this.scene);
         this.resize();
-        //this.paused = true;
         this.addBlock();
-        this.startTime = Date.now();
+        //this.scene.addNode(new Hook(-1, [0,1,0], this.scene, "left"));
    
         
     }
@@ -110,13 +107,16 @@ class App extends Application {
     addBlock() {
         console.log("dodan nov block");
         let t;
+        let tHook;
         let startDirection;
         if (Math.random() < 0.5) { // ce je true, se spawna levo --> gre proti desni
             t = vec3.clone(this.emptyLeft.translation);
+            tHook = vec3.clone(this.emptyHookLeft.translation);
             startDirection = "left";
         }
         else { // ce je false, se spawna desno --> gre proti levi
             t = vec3.clone(this.emptyRight.translation);
+            tHook = vec3.clone(this.emptyHookRight.translation);
             startDirection = "right";
         }
         let blockBefore;
@@ -126,14 +126,19 @@ class App extends Application {
             blockBefore = null;
         }
         let block = new Block(this.scene.blocks.length, t, this.scene, startDirection, blockBefore); // ta blok se premika
+        let hook = new Hook(this.scene.hooks.length, tHook, this.scene, startDirection);
         this.scene.blocks.push(block);
         this.scene.addNode(block);
+        this.scene.hooks.push(hook);
+        this.scene.addNode(hook);
+        //console.log(this.scene.hooks);
         
     }
 
    
     dropBlock() {
         this.scene.blocks[this.scene.blocks.length - 1].falling = true; 
+        this.scene.hooks[this.scene.hooks.length - 1].visible = false;
         console.log("spusti block")
         this.updateCamera(); 
         this.updateLevel();
@@ -186,7 +191,8 @@ class App extends Application {
                 }
                 for (const hook of this.scene.hooks) {
                     if (hook) {
-                        
+                        hook.update(this.speed);
+                        hook.updateMatrix();
                     }
                 }
             document.getElementById("score").innerHTML = this.scene.score;
