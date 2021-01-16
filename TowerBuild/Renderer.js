@@ -112,10 +112,17 @@ export default class Renderer {
         }
 
         // this is an application-scoped convention, matching the shader
-        const attributeNameToIndexMap = {
+        /*const attributeNameToIndexMap = {
             POSITION   : 0,
             TEXCOORD_0 : 1,
         };
+        */
+        const attributeNameToIndexMap = {
+            POSITION   : 0,
+            TEXCOORD_0 : 1,
+            NORMAL : 2,
+        };
+        
 
         for (const name in primitive.attributes) {
             const accessor = primitive.attributes[name];
@@ -213,6 +220,7 @@ export default class Renderer {
             //const program = this.programs.phong;
             const program = this.programs.simple;
             gl.uniformMatrix4fv(program.uniforms.uMvpMatrix, false, mvpMatrix);
+            
             for (const primitive of node.mesh.primitives) {
                 this.renderPrimitive(primitive);
             }

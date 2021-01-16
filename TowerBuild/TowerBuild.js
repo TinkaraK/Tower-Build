@@ -6,6 +6,7 @@ import Block from './Block.js';
 import Border from './Borders.js';
 import Light from './Light.js';
 import Hook from './Hook.js';
+import Dust from './Dust.js';
 
 const mat4 = glMatrix.mat4;
 const vec3 = glMatrix.vec3;
@@ -27,7 +28,7 @@ class App extends Application {
         this.speed = 0.1;
 
         this.loader = new GLTFLoader();
-        await this.loader.load('../../common/models/scene/scene.gltf');
+        await this.loader.load('../../common/models/scene3/scene3.gltf');
 
         this.scene = await this.loader.loadScene(this.loader.defaultScene);
         this.camera = await this.loader.loadNode('Camera');
@@ -36,7 +37,6 @@ class App extends Application {
         this.crane = await this.loader.loadNode('crane2');
         this.emptyHookLeft = await this.loader.loadNode('leftHook');
         this.emptyHookRight = await this.loader.loadNode('rightHook');
-        this.light = new Light();
         if (!this.scene || !this.camera) {
             throw new Error('Scene or Camera not present in glTF');
         }
@@ -54,21 +54,22 @@ class App extends Application {
             }
         })
 
-        
         this.scene.blocks = [];
         this.scene.hooks = [];//[new Hook(false, "left", this.scene), new Hook(true, "right", this.scene)];
+        this.scene.dust  = [];
         this.scene.score = 0;
+        this.beatScore = false;
         this.scene.borders = [this.emptyLeft.translation, this.emptyRight.translation];
         this.scene.emptyHooks = [this.emptyHookLeft.translation, this.emptyHookRight.translation];
-        this.scene.sumC = 0;
+        this.highScore = localStorage.getItem("highScore");
+        if (this.highScore == null) {
+            this.highScore = 0;
+        }
 
         this.renderer = new Renderer(this.gl);
         this.renderer.prepareScene(this.scene);
         this.resize();
         this.addBlock();
-        //this.scene.addNode(new Hook(-1, [0,1,0], this.scene, "left"));
-   
-        
     }
 
 
@@ -95,13 +96,14 @@ class App extends Application {
         this.paused = true;
         const audio = new Audio('../../common/sound/game_over.mp3');
         audio.play();
-        console.log("konec")
-        document.getElementById("endDiv").style.visibility = "visible";
         this.score = this.scene.score;
+        document.getElementById("endDiv").style.visibility = "visible";
         document.getElementById("startGame").style.visibility = "hidden";
         document.getElementById("scoreDiv").style.visibility = "visible";
         document.getElementById("overlay").style.visibility = "hidden";
         document.getElementById("restartDiv").style.visibility = "visible";
+        if (this.scene.score > this.highScore)
+            localStorage.setItem("highScore", this.scene.score);
     }
 
     addBlock() {
@@ -131,14 +133,18 @@ class App extends Application {
         this.scene.addNode(block);
         this.scene.hooks.push(hook);
         this.scene.addNode(hook);
-        //console.log(this.scene.hooks);
+        if (this.scene.blocks.length == 1) {
+            this.scene.firstBlock = block;
+        }
         
     }
 
    
     dropBlock() {
+        let num = this.scene.blocks.length;
         this.scene.blocks[this.scene.blocks.length - 1].falling = true; 
-        this.scene.hooks[this.scene.hooks.length - 1].visible = false;
+        let hook = this.scene.hooks[this.scene.hooks.length - 2];
+        this.scene.hooks[this.scene.hooks.length - 1].translation = [-10, -10, -10];
         console.log("spusti block")
         this.updateCamera(); 
         this.updateLevel();
@@ -149,11 +155,15 @@ class App extends Application {
         if (this.scene.blocks.length < 6) {
             this.emptyLeft.translation[1] += 1;
             this.emptyRight.translation[1] += 1;
+            this.emptyHookLeft.translation[1] += 1;
+            this.emptyHookRight.translation[1] += 1;
             this.crane.translation[1] += 1;
         }
         else {
             this.emptyLeft.translation[1] += 2;
-            this.emptyRight.translation[1] += 2;
+            this.emptyRight.translation[1] += 2;  
+            this.emptyHookLeft.translation[1] += 2;
+            this.emptyHookRight.translation[1] += 2;
             this.crane.translation[1] += 2;
         }
        
@@ -170,6 +180,12 @@ class App extends Application {
         this.camera.updateMatrix();
         
     }
+    
+    activateDust(block) {
+        let dust = new Dust(block.translation, this.scene);
+        this.scene.addNode(dust);
+        this.scene.dust.push(dust);
+    }
 
     update() {
         if (this.scene) {
@@ -183,26 +199,39 @@ class App extends Application {
                         }
                         if (block.dropNew) {
                             this.addBlock();
+                            this.activateDust(block);
                             block.dropNew = false;
+                            if (this.scene.score > this.highScore && !this.beatScore) {
+                                this.beatScore = true;
+                                let audio = new Audio("../../common/sound/win.mp3");
+                                audio.play();
+                            }
                         }  
-                        
                     }
-                   
                 }
                 for (const hook of this.scene.hooks) {
                     if (hook) {
-                        hook.update(this.speed);
-                        hook.updateMatrix();
+                        if (hook.visible) {
+                            hook.update(this.speed);
+                            hook.updateMatrix();
+                        } 
                     }
                 }
+                for (const dust of this.scene.dust) {
+                    if (dust && dust.visible) {
+                        dust.update();
+                        dust.updateMatrix();
+                    }
+                }
+
             document.getElementById("score").innerHTML = this.scene.score;
             document.getElementById("scoreSpan").innerHTML = this.scene.score;  
-            document.getElementById("highScore").innerHTML = this.scene.score;
-            //document.getElementById("highScoreSpan").innerHTML = this.scene.score;  
+            if (this.scene.score > this.highScore)
+                document.getElementById("beatenRecord").innerHTML = "\nYou beat the record!";  
+            document.getElementById("highScore").innerHTML = this.highScore;
 
             }
             if (this.paused) {
-                console.log("paused");
             }
         }
     }   
@@ -263,8 +292,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.querySelector('canvas');
     const app = new App(canvas);
     const gui = new dat.GUI();
-    gui.add(app, 'speed', 0.05, 0.5);
+    gui.add(app, 'speed', 0.03, 0.5);
     gui.add(app, 'enableCamera');
-    highScore = Math.max(highScore, app.score);
-    console.log(highScore);
 });

@@ -31,7 +31,9 @@ export default class Hook extends Node {
 
     update(speed) {
         // ce se premika levo desno, je treba samo x spremenit
-        if (this.visible) {      
+        if (this.visible) {  
+            //const audio = new Audio('../../common/sound/hook.mp3');
+            //audio.play();
             if (this.direction) { // desno
                 if (this.translation[0] <= this.hooks[1][0]) { // ce zadane desni rob, mora nazaj
                     this.direction = false;
@@ -44,6 +46,10 @@ export default class Hook extends Node {
                     this.direction = true;
                 }
             }
+        }
+        if (!this.visible) {
+            this.translation = [-10,-10,-10]
+            this.updateMatrix();
         }
        
             //this.updateMatrix();

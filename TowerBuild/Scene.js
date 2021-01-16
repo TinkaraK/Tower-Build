@@ -9,7 +9,10 @@ export default class Scene {
     addNode(node) {
         this.nodes.push(node);
     }
-
+    
+    removeNode(node) {
+        this.nodes.pop();
+    }
     traverse(before, after) {
         for (const node of this.nodes) {
             this.traverseNode(node, before, after);

@@ -26,6 +26,7 @@ export default class Block extends Node {
         this.fallingDown = false;
         this.tippingOver = false;
         this.rotationDirection = true;
+        this.collapsing = false;
         this.gameOver = false;
         this.borders = this.scene.borders;
         this.blockBefore = blockBefore; // njegov predhodnik
@@ -103,6 +104,25 @@ export default class Block extends Node {
                         this.fallingDown = true;
                         
                     }
+                    // ce je zadnji block zamaknjen za vec kot eno kocko od prvega
+                    else if (Math.abs(this.translation[0] - this.scene.firstBlock.translation[0]) > 2) {
+                        console.log("unstable");
+                        this.tippingOver = true;
+                        // ugotovi, v katero smer se more prevrnt
+                        if (diff > 0) {
+                            //console.log("vecji " + diff); // levo
+                            this.rotationDirection = false;
+                        }
+                        else {
+                            //console.log("manjsi " + diff); // desno
+                            this.rotationDirection = true;
+                        }
+                        for (let i = 5; i < 0; i++) {
+                            console.log("collapsing" + i);
+                            this.scene.blocks[this.scene.blocks.length - i].collapsing = true;
+                        }
+                        
+                    }
                     // ce zadane spodnjega, ampak premalo, se prevrne
                     else {
                         this.tippingOver = true;
@@ -117,9 +137,6 @@ export default class Block extends Node {
                         }
                         const audio = new Audio('../../common/sound/drop.mp3');
                         audio.play();
-                    }
-                    if (this.scene.sumC / this.scene.blocks.length - 1 < this.scene.blocks[0].translation[0]) {
-                        console.log("unstable")
                     }
                 }
             }
@@ -161,6 +178,9 @@ export default class Block extends Node {
             }
             const degrees = this.r.map(x => x * 180 / pi);
             quat.fromEuler(this.rotation, ...degrees);
+        }
+        if (this.collapsing) {
+            this.translation[1] -= 0.2;
         }
             this.updateMatrix();
     }
