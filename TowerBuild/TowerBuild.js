@@ -45,8 +45,6 @@ class App extends Application {
             throw new Error('Camera node does not contain a camera reference');
         }
 
-
-        document.getElementById("pause").addEventListener('click', this.pauseGame);
         document.getElementById("startButton").addEventListener('click', this.startGame);
         document.addEventListener('keyup', e => {
             if (e.code == "Space") {
@@ -55,13 +53,14 @@ class App extends Application {
         })
 
         this.scene.blocks = [];
-        this.scene.hooks = [];//[new Hook(false, "left", this.scene), new Hook(true, "right", this.scene)];
+        this.scene.hooks = [];
         this.scene.dust  = [];
         this.scene.score = 0;
         this.beatScore = false;
         this.scene.borders = [this.emptyLeft.translation, this.emptyRight.translation];
         this.scene.emptyHooks = [this.emptyHookLeft.translation, this.emptyHookRight.translation];
         this.highScore = localStorage.getItem("highScore");
+        //localStorage.setItem("highScore",0);
         if (this.highScore == null) {
             this.highScore = 0;
         }
@@ -80,9 +79,7 @@ class App extends Application {
         //this.paused = false;
     }
 
-    pauseGame() {
-        this.paused = !this.paused;
-    }
+  
 
     resetGame() {
         this.scene = this.loader.loadScene(this.loader.defaultScene);
@@ -181,10 +178,20 @@ class App extends Application {
         
     }
     
+/*
+        translation[0] = levo desno = x
+        translation[1] = dol gor = y
+        translation[2] = naprej nazaj = z
+    
+    */ 
+
     activateDust(block) {
-        let dust = new Dust(block.translation, this.scene);
+        let tr = vec3.clone(block.translation);
+        tr = vec3.add(tr, tr, [0, -1, -1]);
+        let dust = new Dust(this.scene.dust.length, tr, this.scene);
         this.scene.addNode(dust);
-        this.scene.dust.push(dust);
+        this.scene.dust.push(dust);             
+        
     }
 
     update() {
@@ -201,7 +208,7 @@ class App extends Application {
                             this.addBlock();
                             this.activateDust(block);
                             block.dropNew = false;
-                            if (this.scene.score > this.highScore && !this.beatScore) {
+                            if (this.scene.score > this.highScore && this.highScore > 0 && !this.beatScore) {
                                 this.beatScore = true;
                                 let audio = new Audio("../../common/sound/win.mp3");
                                 audio.play();
@@ -218,7 +225,7 @@ class App extends Application {
                     }
                 }
                 for (const dust of this.scene.dust) {
-                    if (dust && dust.visible) {
+                    if (dust) {
                         dust.update();
                         dust.updateMatrix();
                     }
@@ -226,7 +233,7 @@ class App extends Application {
 
             document.getElementById("score").innerHTML = this.scene.score;
             document.getElementById("scoreSpan").innerHTML = this.scene.score;  
-            if (this.scene.score > this.highScore)
+            if (this.scene.score > this.highScore && this.highScore > 0)
                 document.getElementById("beatenRecord").innerHTML = "\nYou beat the record!";  
             document.getElementById("highScore").innerHTML = this.highScore;
 
@@ -293,5 +300,4 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = new App(canvas);
     const gui = new dat.GUI();
     gui.add(app, 'speed', 0.03, 0.5);
-    gui.add(app, 'enableCamera');
 });

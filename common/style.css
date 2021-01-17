@@ -53,16 +53,16 @@ a.back:hover {
     font-size: 20px;
 }
 
-#score{
+/*#score{
     font-size: 20px;
     margin: 0;
     position: absolute;
-    top: 10%;
-    left: 40%;
+    top: 20%;
+    left: 60%;
     margin-right: -50%;
     transform: translate(-50%, -50%);
     font-family: 'Calibri', 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif;  
-}
+}*/
 
 
 #startDiv{
@@ -110,9 +110,6 @@ a.back:hover {
 }
 
 
-
-
-
 table{
     width: 100%;
 }
@@ -121,10 +118,10 @@ ul{
     list-style-type: none;
 }
 
-#start,#restart,#pause{
+#start,#restart{
     font-size: 15px;
     
-    width: 41%;
+    width: 75%;
     height: 50%;
 }
 

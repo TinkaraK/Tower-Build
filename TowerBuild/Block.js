@@ -13,11 +13,14 @@ export default class Block extends Node {
         this.translation = tr;
         this.scene = scene;
         if (this.scene) {
-            if (this.scene.blocks.length == 0)
-                this.mesh = this.scene.nodes[8].mesh;
+            if (this.scene.blocks.length == 0) {
+                this.mesh = this.scene.nodes[42].mesh; //8
+            } 
             else
-                this.mesh = this.scene.nodes[25].mesh;
+                this.mesh = this.scene.nodes[41].mesh;
         }
+         
+        
         this.r = [0,0,0]; // rotacija
         this.leftAndRight = true; // ali se vozi levo in desno
         this.dropNew = false; // kdaj lahko dodas novega
@@ -28,12 +31,14 @@ export default class Block extends Node {
         this.rotationDirection = true;
         this.collapsing = false;
         this.gameOver = false;
+        this.generateDust = false;
         this.borders = this.scene.borders;
         this.blockBefore = blockBefore; // njegov predhodnik
         if (startDirection === 'left')
             this.direction = true;
         else
             this.direction = false;
+        
         this.updateMatrix;
     }
 
@@ -94,6 +99,7 @@ export default class Block extends Node {
                         console.log("pristane")
                         this.dropped = true;
                         this.dropNew = true; // dodaj novega
+                        this.generateDust = true;
                         this.scene.score ++; // povecaj score - ker je bilo uredu
                         const audio = new Audio('../../common/sound/drop.mp3');
                         audio.play();
@@ -126,6 +132,7 @@ export default class Block extends Node {
                     // ce zadane spodnjega, ampak premalo, se prevrne
                     else {
                         this.tippingOver = true;
+                        this.generateDust = true;
                         // ugotovi, v katero smer se more prevrnt
                         if (diff > 0) {
                             //console.log("vecji " + diff); // levo
@@ -150,6 +157,8 @@ export default class Block extends Node {
               
                 this.translation[1] -= 0.2;
                 this.translation[2] = this.borders[0][2];
+                //const audio = new Audio('../../common/sound/drop.mp3');
+                 //   audio.play();
             }
         }
         if (this.tippingOver) {
@@ -162,6 +171,7 @@ export default class Block extends Node {
                 this.translation[2] = this.translation[2];
                 if (this.translation[1] <= 1 || this.scene.blocks.length > 6 && this.translation[1] <= this.scene.blocks[this.blockNum - 5].translation[1]) {
                     this.tippingOver = false;
+                    this.generateDust = true;
                     this.gameOver = true;
                 }
             }
@@ -173,6 +183,7 @@ export default class Block extends Node {
                 this.translation[2] = this.translation[2];
                 if (this.translation[1] <= 1 || this.scene.blocks.length > 6 && this.translation[1] <= this.scene.blocks[this.blockNum - 5].translation[1]) {
                     this.tippingOver = false;
+                    this.generateDust = true;
                     this.gameOver = true;
                 }
             }

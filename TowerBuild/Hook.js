@@ -13,7 +13,7 @@ export default class Hook extends Node {
         this.translation = tr;
         this.scene = scene;
         if (this.scene) {
-            this.mesh = this.scene.nodes[6].mesh;
+             this.mesh = this.scene.nodes[6].mesh;
             this.hooks = this.scene.emptyHooks;
         }
         if (direction === 'left')
